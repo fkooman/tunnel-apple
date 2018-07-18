@@ -17,7 +17,7 @@ class ViewController: UIViewController, URLSessionDataDelegate {
 
     static let CIPHER: PIATunnelProvider.Cipher = .aes256cbc
 
-    static let DIGEST: PIATunnelProvider.Digest = .sha526
+    static let DIGEST: PIATunnelProvider.Digest = .sha256
 
     static let HANDSHAKE: PIATunnelProvider.Handshake = .rsa4096tuxed
     
