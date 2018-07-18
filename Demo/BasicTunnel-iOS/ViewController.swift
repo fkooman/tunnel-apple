@@ -11,15 +11,15 @@ import NetworkExtension
 import PIATunnel
 
 class ViewController: UIViewController, URLSessionDataDelegate {
-    static let APP_GROUP = "group.com.privateinternetaccess.ios.demo.BasicTunnel"
+    static let APP_GROUP = "group.net.tuxed.vpn.BasicTunnel"
     
-    static let VPN_BUNDLE = "com.privateinternetaccess.ios.demo.BasicTunnel.BasicTunnelExtension"
+    static let VPN_BUNDLE = "net.tuxed.vpn.BasicTunnel.BasicTunnelExtension"
 
-    static let CIPHER: PIATunnelProvider.Cipher = .aes128cbc
+    static let CIPHER: PIATunnelProvider.Cipher = .aes256cbc
 
-    static let DIGEST: PIATunnelProvider.Digest = .sha1
+    static let DIGEST: PIATunnelProvider.Digest = .sha526
 
-    static let HANDSHAKE: PIATunnelProvider.Handshake = .rsa2048
+    static let HANDSHAKE: PIATunnelProvider.Handshake = .rsa4096tuxed
     
     static let RENEG: Int? = nil
     
@@ -60,14 +60,14 @@ class ViewController: UIViewController, URLSessionDataDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        textServer.text = "germany"
-        textDomain.text = "privateinternetaccess.com"
+        textServer.text = "vpn.tuxed.net"
+        textDomain.text = ""
 //        textServer.text = "159.122.133.238"
 //        textDomain.text = ""
-        textPort.text = "8080"
+        textPort.text = "1197"
         switchTCP.isOn = false
-        textUsername.text = "myusername"
-        textPassword.text = "mypassword"
+        textUsername.text = "foo"
+        textPassword.text = "bar"
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(VPNStatusDidChange(notification:)),
@@ -107,9 +107,9 @@ class ViewController: UIViewController, URLSessionDataDelegate {
     
     @IBAction func tcpClicked(_ sender: Any) {
         if switchTCP.isOn {
-            textPort.text = "443"
+            textPort.text = "1197"
         } else {
-            textPort.text = "8080"
+            textPort.text = "1197"
         }
     }
     
@@ -138,7 +138,7 @@ class ViewController: UIViewController, URLSessionDataDelegate {
             builder.cipher = ViewController.CIPHER
             builder.digest = ViewController.DIGEST
             builder.handshake = ViewController.HANDSHAKE
-            builder.mtu = 1350
+            builder.mtu = 1500
             builder.renegotiatesAfterSeconds = ViewController.RENEG
             builder.shouldDebug = true
             builder.debugLogKey = "Log"

@@ -58,6 +58,9 @@ extension PIATunnelProvider {
         /// Certificate with RSA 4096-bit key.
         case rsa4096 = "RSA-4096"
         
+        /// Certificate with RSA 4096-bit key (vpn.tuxed.net).
+        case rsa4096tuxed = "RSA-4096-TUXED"
+
         /// Certificate with ECC based on secp256r1 curve.
         case ecc256r1 = "ECC-256r1"
         
@@ -76,6 +79,7 @@ extension PIATunnelProvider {
             .rsa2048: "e2fccccaba712ccc68449b1c56427ac1",
             .rsa3072: "2fcdb65712df9db7dae34a1f4a84e32d",
             .rsa4096: "ec085790314aa0ad4b01dda7b756a932",
+            .rsa4096tuxed: "a9d97587f79662aed8c41be34bd3e609",
             .ecc256r1: "6f0f23a616479329ce54614f76b52254",
 //            .ecc256k1: "80c3b0f34001e4101e34fde9eb1dfa87",
             .ecc521r1: "82446e0c80706e33e6e793cebf1b0c59"
