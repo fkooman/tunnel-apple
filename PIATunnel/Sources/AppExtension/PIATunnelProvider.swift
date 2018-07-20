@@ -55,12 +55,24 @@ open class PIATunnelProvider: NEPacketTunnelProvider {
     
     private let caTmpFilename = "CA.pem"
     
+    private let certTmpFilename = "CERT.pem"
+    
+    private let keyTmpFilename = "KEY.pem"
+    
     private var cachesURL: URL {
         return URL(fileURLWithPath: NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)[0])
     }
     
     private var tmpCaURL: URL {
         return cachesURL.appendingPathComponent(caTmpFilename)
+    }
+
+    private var tmpCertURL: URL {
+        return cachesURL.appendingPathComponent(certTmpFilename)
+    }
+    
+    private var tmpKeyURL: URL {
+        return cachesURL.appendingPathComponent(keyTmpFilename)
     }
     
     // MARK: Tunnel configuration
@@ -144,11 +156,28 @@ open class PIATunnelProvider: NEPacketTunnelProvider {
             return
         }
 
+        do {
+            try cfg.handshake.write(to: tmpCertURL, custom: cfg.cert)
+        } catch {
+            completionHandler(ProviderError.certificateSerialization)
+            return
+        }
+
+        do {
+            try cfg.handshake.write(to: tmpKeyURL, custom: cfg.key)
+        } catch {
+            completionHandler(ProviderError.certificateSerialization)
+            return
+        }
+        
         cfg.print(appVersion: appVersion)
         
         let caPath = tmpCaURL.path
+        let certPath = tmpCertURL.path
+        let keyPath = tmpKeyURL.path
+        
 //        log.info("Temporary CA is stored to: \(caPath)")
-        let encryption = SessionProxy.EncryptionParameters(cfg.cipher.rawValue, cfg.digest.rawValue, caPath, cfg.handshake.digest)
+        let encryption = SessionProxy.EncryptionParameters(cfg.cipher.rawValue, cfg.digest.rawValue, caPath, certPath, keyPath, cfg.handshake.digest)
         let credentials = SessionProxy.Credentials(endpoint.username, endpoint.password)
         
         let proxy: SessionProxy

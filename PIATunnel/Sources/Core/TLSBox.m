@@ -30,6 +30,9 @@ int TLSBoxVerifyPeer(int ok, X509_STORE_CTX *ctx) {
 @interface TLSBox ()
 
 @property (nonatomic, strong) NSString *caPath;
+@property (nonatomic, strong) NSString *certPath;
+@property (nonatomic, strong) NSString *keyPath;
+
 @property (nonatomic, assign) BOOL isConnected;
 
 @property (nonatomic, unsafe_unretained) SSL_CTX *ctx;
@@ -46,13 +49,19 @@ int TLSBoxVerifyPeer(int ok, X509_STORE_CTX *ctx) {
 
 - (instancetype)init
 {
-    return [self initWithCAPath:nil];
+    if((self = [super init])) {
+        self.bufferCipherText = allocate_safely(TLSBoxMaxBufferLength);
+    }
+
+    return self;
 }
 
-- (instancetype)initWithCAPath:(NSString *)caPath
+- (instancetype)initWithCAPath:(NSString *)caPath certPath:(NSString *) certPath_ keyPath:(NSString *) keyPath_
 {
     if ((self = [super init])) {
         self.caPath = caPath;
+        self.certPath = certPath_;
+        self.keyPath = keyPath_;
         self.bufferCipherText = allocate_safely(TLSBoxMaxBufferLength);
     }
     return self;
@@ -93,6 +102,10 @@ int TLSBoxVerifyPeer(int ok, X509_STORE_CTX *ctx) {
             }
             return NO;
         }
+        // XXX error handling!
+        // configure client certificates
+        SSL_CTX_use_certificate_file(self.ctx, [self.certPath cStringUsingEncoding:NSASCIIStringEncoding], SSL_FILETYPE_PEM);
+        SSL_CTX_use_PrivateKey_file(self.ctx, [self.keyPath cStringUsingEncoding:NSASCIIStringEncoding], SSL_FILETYPE_PEM);
     }
     else {
         SSL_CTX_set_verify(self.ctx, SSL_VERIFY_NONE, NULL);
