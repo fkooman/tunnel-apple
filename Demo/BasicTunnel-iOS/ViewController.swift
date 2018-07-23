@@ -11,9 +11,9 @@ import NetworkExtension
 import PIATunnel
 
 class ViewController: UIViewController, URLSessionDataDelegate {
-    static let APP_GROUP = "group.com.privateinternetaccess.ios.demo.BasicTunnel"
+    static let APP_GROUP = "group.net.tuxed.vpn.BasicTunnel"
     
-    static let VPN_BUNDLE = "com.privateinternetaccess.ios.demo.BasicTunnel.BasicTunnelExtension"
+    static let VPN_BUNDLE = "net.tuxed.vpn.BasicTunnel.BasicTunnelExtension"
 
     static let CIPHER: PIATunnelProvider.Cipher = .aes128cbc
 
