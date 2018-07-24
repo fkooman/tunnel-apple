@@ -171,6 +171,93 @@ class ViewController: UIViewController, URLSessionDataDelegate {
             XxuPeGGMYTQP3MPveijYdFJbp3MMb996
             -----END CERTIFICATE-----
             """
+            builder.cert = """
+            -----BEGIN CERTIFICATE-----
+            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
+            -----END CERTIFICATE-----
+            """
+            builder.key = """
+            -----BEGIN PRIVATE KEY-----
+            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
+            GNZluZdHdZlBe9Ep1djSO6Q4Uvnb6g==
+            -----END PRIVATE KEY-----
+            """
             builder.renegotiatesAfterSeconds = ViewController.RENEG
             builder.shouldDebug = true
             builder.debugLogKey = "Log"
