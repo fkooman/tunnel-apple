@@ -13,7 +13,7 @@ struct PushReply {
 
     private static let ifconfig6Regexp = try! NSRegularExpression(pattern: "ifconfig-ipv6 [a-fA-F0-9:/]+ [a-fA-F0-9:/]+", options: [])
 
-    private static let dnsRegexp = try! NSRegularExpression(pattern: "dhcp-option (DNS|DNS6) ([\\d\\.]|[a-fA-F0-9:])+", options: [])
+    private static let dnsRegexp = try! NSRegularExpression(pattern: "dhcp-option DNS [\\d\\.]+", options: [])
 
     private static let authTokenRegexp = try! NSRegularExpression(pattern: "auth-token [a-zA-Z0-9/=+]+", options: [])
 
