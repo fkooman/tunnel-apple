@@ -385,7 +385,7 @@ extension PIATunnelProvider: SessionProxyDelegate {
     // MARK: SessionProxyDelegate (tunnel queue)
     
     /// :nodoc:
-    public func sessionDidStart(_ proxy: SessionProxy, remoteAddress: String, address: String, gatewayAddress: String, dnsServers: [String]) {
+    public func sessionDidStart(_ proxy: SessionProxy, remoteAddress: String, address: String, addressMask: String, gatewayAddress: String, dnsServers: [String]) {
         reasserting = false
         
         log.info("Session did start")
@@ -393,10 +393,11 @@ extension PIATunnelProvider: SessionProxyDelegate {
         log.info("Returned ifconfig parameters:")
         log.info("\tTunnel: \(remoteAddress)")
         log.info("\tOwn address: \(address)")
+        log.info("\tOwn address mask: \(addressMask)")
         log.info("\tGateway: \(gatewayAddress)")
         log.info("\tDNS: \(dnsServers)")
         
-        bringNetworkUp(tunnel: remoteAddress, vpn: address, gateway: gatewayAddress, dnsServers: dnsServers) { (error) in
+        bringNetworkUp(tunnel: remoteAddress, address: address, addressMask: addressMask, gateway: gatewayAddress, dnsServers: dnsServers) { (error) in
             if let error = error {
                 log.error("Failed to configure tunnel: \(error)")
                 self.pendingStartHandler?(error)
@@ -423,13 +424,13 @@ extension PIATunnelProvider: SessionProxyDelegate {
         socket?.shutdown()
     }
     
-    private func bringNetworkUp(tunnel: String, vpn: String, gateway: String, dnsServers: [String], completionHandler: @escaping (Error?) -> Void) {
+    private func bringNetworkUp(tunnel: String, address: String, addressMask: String, gateway: String, dnsServers: [String], completionHandler: @escaping (Error?) -> Void) {
         
         // route all traffic to VPN
         let defaultRoute = NEIPv4Route.default()
         defaultRoute.gatewayAddress = gateway
         
-        let ipv4Settings = NEIPv4Settings(addresses: [vpn], subnetMasks: ["255.255.255.255"])
+        let ipv4Settings = NEIPv4Settings(addresses: [address], subnetMasks: [addressMask])
         ipv4Settings.includedRoutes = [defaultRoute]
         ipv4Settings.excludedRoutes = []
         
