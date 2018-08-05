@@ -67,7 +67,7 @@ public protocol SessionProxyDelegate: class {
      - Parameter gatewayAddress: The address of the gateway.
      - Parameter dnsServers: The DNS servers set up for this session.
      */
-    func sessionDidStart(_: SessionProxy, remoteAddress: String, address: String, gatewayAddress: String, dnsServers: [String])
+    func sessionDidStart(_: SessionProxy, remoteAddress: String, address: String, address6: String, address6Prefix: NSNumber, gatewayAddress: String, gateway6Address: String, dnsServers: [String])
     
     /**
      Called after stopping a session.
@@ -970,7 +970,10 @@ public class SessionProxy {
             self,
             remoteAddress: remoteAddress,
             address: reply.address,
+            address6: reply.address6,
+            address6Prefix: reply.address6Prefix,
             gatewayAddress: reply.gatewayAddress,
+            gateway6Address: reply.gateway6Address,
             dnsServers: reply.dnsServers
         )
 
