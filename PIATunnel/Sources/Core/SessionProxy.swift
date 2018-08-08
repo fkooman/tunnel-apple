@@ -894,7 +894,7 @@ public class SessionProxy {
             log.debug("Received PUSH_REPLY: \"\(message)\"")
 
             let ifconfigRegexp = try! NSRegularExpression(pattern: "ifconfig [\\d\\.]+ [\\d\\.]+", options: [])
-            let dnsRegexp = try! NSRegularExpression(pattern: "dhcp-option DNS [\\d\\.]+", options: [])
+            let dnsRegexp = try! NSRegularExpression(pattern: "dhcp-option (DNS|DNS6) ([\\d\\.]|[a-fA-F0-9:])+", options: [])
             let authTokenRegexp = try! NSRegularExpression(pattern: "auth-token [a-zA-Z0-9/=+]+", options: [])
             let peerIdRegexp = try! NSRegularExpression(pattern: "peer-id [0-9]+", options: [])
 
