@@ -11,13 +11,13 @@ import NetworkExtension
 import PIATunnel
 
 class ViewController: UIViewController, URLSessionDataDelegate {
-    static let APP_GROUP = "group.com.privateinternetaccess.ios.demo.BasicTunnel"
+    static let APP_GROUP = "group.net.tuxed.vpn.BasicTunnel"
     
-    static let VPN_BUNDLE = "com.privateinternetaccess.ios.demo.BasicTunnel.BasicTunnelExtension"
+    static let VPN_BUNDLE = "net.tuxed.vpn.BasicTunnel.BasicTunnelExtension"
 
-    static let CIPHER: PIATunnelProvider.Cipher = .aes128cbc
+    static let CIPHER: PIATunnelProvider.Cipher = .aes256cbc
 
-    static let DIGEST: PIATunnelProvider.Digest = .sha1
+    static let DIGEST: PIATunnelProvider.Digest = .sha256
 
     static let HANDSHAKE: PIATunnelProvider.Handshake = .rsa2048
     
@@ -60,14 +60,14 @@ class ViewController: UIViewController, URLSessionDataDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        textServer.text = "germany"
-        textDomain.text = "privateinternetaccess.com"
+        textServer.text = "vpn.tuxed.net"
+        textDomain.text = ""
 //        textServer.text = "159.122.133.238"
 //        textDomain.text = ""
-        textPort.text = "8080"
+        textPort.text = "1197"
         switchTCP.isOn = false
-        textUsername.text = "myusername"
-        textPassword.text = "mypassword"
+        textUsername.text = "foo"
+        textPassword.text = "bar"
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(VPNStatusDidChange(notification:)),
@@ -107,9 +107,9 @@ class ViewController: UIViewController, URLSessionDataDelegate {
     
     @IBAction func tcpClicked(_ sender: Any) {
         if switchTCP.isOn {
-            textPort.text = "443"
+            textPort.text = "1197"
         } else {
-            textPort.text = "8080"
+            textPort.text = "1197"
         }
     }
     
@@ -134,11 +134,50 @@ class ViewController: UIViewController, URLSessionDataDelegate {
 
             var builder = PIATunnelProvider.ConfigurationBuilder(appGroup: ViewController.APP_GROUP)
             let socketType: PIATunnelProvider.SocketType = (self.switchTCP.isOn ? .tcp : .udp)
-            builder.endpointProtocols = [PIATunnelProvider.EndpointProtocol(socketType, port, .pia)]
+            builder.endpointProtocols = [PIATunnelProvider.EndpointProtocol(socketType, port, .vanilla)]
             builder.cipher = ViewController.CIPHER
             builder.digest = ViewController.DIGEST
             builder.handshake = ViewController.HANDSHAKE
-            builder.mtu = 1350
+            builder.mtu = 1500
+            builder.handshake = .custom
+            builder.ca = """
+            -----BEGIN CERTIFICATE-----
+            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
+            XxuPeGGMYTQP3MPveijYdFJbp3MMb996
+            -----END CERTIFICATE-----
+            """
+            builder.cert = """
+            ...REPLACE WITH CERTIFICATE...
+            """
+             builder.key = """
+            ...REPLACE WITH KEY...
+            """
             builder.renegotiatesAfterSeconds = ViewController.RENEG
             builder.shouldDebug = true
             builder.debugLogKey = "Log"
