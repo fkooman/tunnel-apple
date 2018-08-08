@@ -400,7 +400,7 @@ extension PIATunnelProvider: SessionProxyDelegate {
     // MARK: SessionProxyDelegate (tunnel queue)
     
     /// :nodoc:
-    public func sessionDidStart(_ proxy: SessionProxy, remoteAddress: String, address: String, gatewayAddress: String, dnsServers: [String]) {
+    public func sessionDidStart(_ proxy: SessionProxy, remoteAddress: String, address: String, address6: String, address6Prefix: NSNumber, gatewayAddress: String, gateway6Address: String, dnsServers: [String]) {
         reasserting = false
         
         log.info("Session did start")
@@ -408,10 +408,14 @@ extension PIATunnelProvider: SessionProxyDelegate {
         log.info("Returned ifconfig parameters:")
         log.info("\tTunnel: \(remoteAddress)")
         log.info("\tOwn address: \(address)")
+        log.info("\tOwn address6: \(address6)")
+        log.info("\tOwn address6Prefix: \(address6Prefix)")
         log.info("\tGateway: \(gatewayAddress)")
+        log.info("\tGateway6: \(gateway6Address)")
+
         log.info("\tDNS: \(dnsServers)")
         
-        bringNetworkUp(tunnel: remoteAddress, vpn: address, gateway: gatewayAddress, dnsServers: dnsServers) { (error) in
+        bringNetworkUp(tunnel: remoteAddress, vpn: address, vpn6: address6, vpn6Prefix: address6Prefix, gateway: gatewayAddress, gateway6: gateway6Address, dnsServers: dnsServers) { (error) in
             if let error = error {
                 log.error("Failed to configure tunnel: \(error)")
                 self.pendingStartHandler?(error)
@@ -438,7 +442,7 @@ extension PIATunnelProvider: SessionProxyDelegate {
         socket?.shutdown()
     }
     
-    private func bringNetworkUp(tunnel: String, vpn: String, gateway: String, dnsServers: [String], completionHandler: @escaping (Error?) -> Void) {
+    private func bringNetworkUp(tunnel: String, vpn: String, vpn6: String, vpn6Prefix: NSNumber, gateway: String, gateway6: String, dnsServers: [String], completionHandler: @escaping (Error?) -> Void) {
         
         // route all traffic to VPN
         let defaultRoute = NEIPv4Route.default()
@@ -448,10 +452,18 @@ extension PIATunnelProvider: SessionProxyDelegate {
         ipv4Settings.includedRoutes = [defaultRoute]
         ipv4Settings.excludedRoutes = []
         
+        let default6Route = NEIPv6Route.default()
+        default6Route.gatewayAddress = gateway6
+        
+        let ipv6Settings = NEIPv6Settings(addresses: [vpn6], networkPrefixLengths: [vpn6Prefix])
+        ipv6Settings.includedRoutes = [default6Route]
+        ipv6Settings.excludedRoutes = []
+        
         let dnsSettings = NEDNSSettings(servers: dnsServers)
         
         let newSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: tunnel)
         newSettings.ipv4Settings = ipv4Settings
+        newSettings.ipv6Settings = ipv6Settings
         newSettings.dnsSettings = dnsSettings
         newSettings.mtu = cfg.mtu
         

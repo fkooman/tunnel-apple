@@ -60,7 +60,7 @@ public protocol SessionProxyDelegate {
      - Parameter gatewayAddress: The address of the gateway.
      - Parameter dnsServers: The DNS servers set up for this session.
      */
-    func sessionDidStart(_: SessionProxy, remoteAddress: String, address: String, gatewayAddress: String, dnsServers: [String])
+    func sessionDidStart(_: SessionProxy, remoteAddress: String, address: String, address6: String, address6Prefix: NSNumber, gatewayAddress: String, gateway6Address: String, dnsServers: [String])
     
     /**
      Called after stopping a session.
@@ -894,6 +894,8 @@ public class SessionProxy {
             log.debug("Received PUSH_REPLY: \"\(message)\"")
 
             let ifconfigRegexp = try! NSRegularExpression(pattern: "ifconfig [\\d\\.]+ [\\d\\.]+", options: [])
+            let ifconfig6Regexp = try! NSRegularExpression(pattern: "ifconfig-ipv6 [a-fA-F0-9:/]+ [a-fA-F0-9:/]+", options: [])
+
             let dnsRegexp = try! NSRegularExpression(pattern: "dhcp-option (DNS|DNS6) ([\\d\\.]|[a-fA-F0-9:])+", options: [])
             let authTokenRegexp = try! NSRegularExpression(pattern: "auth-token [a-zA-Z0-9/=+]+", options: [])
             let peerIdRegexp = try! NSRegularExpression(pattern: "peer-id [0-9]+", options: [])
@@ -914,6 +916,24 @@ public class SessionProxy {
             let address = addresses[1]
             let gatewayAddress = addresses[2]
 
+            var ifconfig6Components: [String]?
+            ifconfig6Regexp.enumerateMatches(in: message, options: [], range: NSMakeRange(0, message.count), using: { (result, flags, _) in
+                guard let range = result?.range else { return }
+                
+                let match = (message as NSString).substring(with: range)
+                ifconfig6Components = match.components(separatedBy: " ")
+            })
+            
+            guard let addresses6 = ifconfig6Components else {
+                deferStop(.shutdown, SessionError.malformedPushReply)
+                return
+            }
+            
+            //let address6 = addresses[1]
+            let address6 = String(addresses6[1].split(separator: "/")[0])
+            let address6Prefix = NSNumber.init(value: Int32(addresses6[1].split(separator: "/")[1])!)
+            let gateway6Address = addresses[2]
+            
             var dnsServers = [String]()
             dnsRegexp.enumerateMatches(in: message, options: [], range: NSMakeRange(0, message.count), using: { (result, flags, _) in
                 guard let range = result?.range else { return }
@@ -955,7 +975,7 @@ public class SessionProxy {
             guard let remoteAddress = link?.remoteAddress else {
                 fatalError("Could not resolve link remote address")
             }
-            delegate?.sessionDidStart(self, remoteAddress: remoteAddress, address: address, gatewayAddress: gatewayAddress, dnsServers: dnsServers)
+            delegate?.sessionDidStart(self, remoteAddress: remoteAddress, address: address, address6: address6, address6Prefix: address6Prefix, gatewayAddress: gatewayAddress, gateway6Address: gateway6Address, dnsServers: dnsServers)
 
             queue.asyncAfter(deadline: .now() + Configuration.pingInterval) { [weak self] in
                 self?.ping()
