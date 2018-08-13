@@ -954,6 +954,8 @@ public class SessionProxy {
                 return
             }
             reply = optionalReply
+            authToken = reply.authToken
+            peerId = reply.peerId
         } catch let e {
             deferStop(.shutdown, e)
             return
@@ -968,9 +970,6 @@ public class SessionProxy {
         guard let remoteAddress = link?.remoteAddress else {
             fatalError("Could not resolve link remote address")
         }
-
-        authToken = reply.authToken
-        peerId = reply.peerId
 
         delegate?.sessionDidStart(
             self,
