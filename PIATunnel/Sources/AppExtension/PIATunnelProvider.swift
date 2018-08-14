@@ -414,18 +414,22 @@ extension PIATunnelProvider: SessionProxyDelegate {
     // MARK: SessionProxyDelegate (tunnel queue)
     
     /// :nodoc:
-    public func sessionDidStart(_ proxy: SessionProxy, remoteAddress: String, address: String, gatewayAddress: String, dnsServers: [String]) {
+    public func sessionDidStart(_ proxy: SessionProxy, remoteAddress: String, address: String, addressMask: String, address6: String, address6Prefix: NSNumber, gatewayAddress: String, gateway6Address: String, dnsServers: [String]) {
         reasserting = false
         
         log.info("Session did start")
         
         log.info("Returned ifconfig parameters:")
         log.info("\tTunnel: \(remoteAddress)")
-        log.info("\tOwn address: \(address)")
-        log.info("\tGateway: \(gatewayAddress)")
+        log.info("\tIPv4 Address: \(address)")
+        log.info("\tIPv4 Netmask: \(addressMask)")
+        log.info("\tIPv6 Address: \(address6)")
+        log.info("\tIPv6 Prefix : \(address6Prefix)")
+        log.info("\tIPv4 Gateway: \(gatewayAddress)")
+        log.info("\tIPv6 Gateway: \(gateway6Address)")
         log.info("\tDNS: \(dnsServers)")
         
-        bringNetworkUp(tunnel: remoteAddress, vpn: address, gateway: gatewayAddress, dnsServers: dnsServers) { (error) in
+        bringNetworkUp(tunnel: remoteAddress, address: address, addressMask: addressMask, address6: address6, address6Prefix: address6Prefix, gateway: gatewayAddress, gateway6: gateway6Address, dnsServers: dnsServers) { (error) in
             if let error = error {
                 log.error("Failed to configure tunnel: \(error)")
                 self.pendingStartHandler?(error)
@@ -452,20 +456,28 @@ extension PIATunnelProvider: SessionProxyDelegate {
         socket?.shutdown()
     }
     
-    private func bringNetworkUp(tunnel: String, vpn: String, gateway: String, dnsServers: [String], completionHandler: @escaping (Error?) -> Void) {
+    private func bringNetworkUp(tunnel: String, address: String, addressMask: String, address6: String, address6Prefix: NSNumber, gateway: String, gateway6: String, dnsServers: [String], completionHandler: @escaping (Error?) -> Void) {
         
         // route all traffic to VPN
         let defaultRoute = NEIPv4Route.default()
         defaultRoute.gatewayAddress = gateway
         
-        let ipv4Settings = NEIPv4Settings(addresses: [vpn], subnetMasks: ["255.255.255.255"])
+        let ipv4Settings = NEIPv4Settings(addresses: [address], subnetMasks: [addressMask])
         ipv4Settings.includedRoutes = [defaultRoute]
         ipv4Settings.excludedRoutes = []
+        
+        let default6Route = NEIPv6Route.default()
+        default6Route.gatewayAddress = gateway6
+        
+        let ipv6Settings = NEIPv6Settings(addresses: [address6], networkPrefixLengths: [address6Prefix])
+        ipv6Settings.includedRoutes = [default6Route]
+        ipv6Settings.excludedRoutes = []
         
         let dnsSettings = NEDNSSettings(servers: dnsServers)
         
         let newSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: tunnel)
         newSettings.ipv4Settings = ipv4Settings
+        newSettings.ipv6Settings = ipv6Settings
         newSettings.dnsSettings = dnsSettings
         newSettings.mtu = cfg.mtu
         
