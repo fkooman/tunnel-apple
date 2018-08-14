@@ -64,10 +64,12 @@ public protocol SessionProxyDelegate: class {
 
      - Parameter remoteAddress: The address of the VPN server.
      - Parameter address: The obtained address.
+     - Parameter addressMask: The obained netmask.
      - Parameter gatewayAddress: The address of the gateway.
      - Parameter dnsServers: The DNS servers set up for this session.
      */
-    func sessionDidStart(_: SessionProxy, remoteAddress: String, address: String, address6: String, address6Prefix: NSNumber, gatewayAddress: String, gateway6Address: String, dnsServers: [String])
+
+    func sessionDidStart(_: SessionProxy, remoteAddress: String, address: String, addressMask: String, address6: String, address6Prefix: NSNumber, gatewayAddress: String, gateway6Address: String, dnsServers: [String])
     
     /**
      Called after stopping a session.
@@ -969,6 +971,7 @@ public class SessionProxy {
             self,
             remoteAddress: remoteAddress,
             address: reply.address,
+            addressMask: reply.addressMask,
             address6: reply.address6,
             address6Prefix: reply.address6Prefix,
             gatewayAddress: reply.gatewayAddress,

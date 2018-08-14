@@ -9,6 +9,13 @@
 import Foundation
 
 struct PushReply {
+    // depending on the topology we have to interprete the parameters of "ifconfig" differently. In
+    // case the topology is subnet, the second compononent is the netmask instead of the gateway
+    private static let topologyRegexp = try! NSRegularExpression(pattern: "topology (net30|p2p|subnet)", options: [])
+    
+    // if the topology is subnet, we also have a "route-gateway" indicating the default gateway
+    private static let routeGatewayRegexp = try! NSRegularExpression(pattern: "route-gateway [\\d\\.]+", options: [])
+    
     private static let ifconfigRegexp = try! NSRegularExpression(pattern: "ifconfig [\\d\\.]+ [\\d\\.]+", options: [])
 
     private static let ifconfig6Regexp = try! NSRegularExpression(pattern: "ifconfig-ipv6 [a-fA-F0-9:/]+ [a-fA-F0-9:/]+", options: [])
@@ -20,6 +27,8 @@ struct PushReply {
     private static let peerIdRegexp = try! NSRegularExpression(pattern: "peer-id [0-9]+", options: [])
     
     let address: String
+
+    let addressMask: String
 
     let address6: String
     
@@ -45,7 +54,31 @@ struct PushReply {
         var dnsServers = [String]()
         var authToken: String?
         var peerId: UInt32?
-
+        var topologyType: String?
+        var routeGateway: String?
+        
+        PushReply.topologyRegexp.enumerateMatches(in: message, options: [], range: NSMakeRange(0, message.count)) { (result, flags, _) in
+            guard let range = result?.range else { return }
+            
+            let match = (message as NSString).substring(with: range)
+            let tokenComponents = match.components(separatedBy: " ")
+            
+            if (tokenComponents.count > 1) {
+                topologyType = tokenComponents[1]
+            }
+        }
+        
+        PushReply.routeGatewayRegexp.enumerateMatches(in: message, options: [], range: NSMakeRange(0, message.count)) { (result, flags, _) in
+            guard let range = result?.range else { return }
+            
+            let match = (message as NSString).substring(with: range)
+            let tokenComponents = match.components(separatedBy: " ")
+            
+            if (tokenComponents.count > 1) {
+                routeGateway = tokenComponents[1]
+            }
+        }
+        
         PushReply.ifconfigRegexp.enumerateMatches(in: message, options: [], range: NSMakeRange(0, message.count)) { (result, flags, _) in
             guard let range = result?.range else { return }
             
@@ -102,8 +135,17 @@ struct PushReply {
         address = addresses[1]
         address6 = String(addresses6[1].split(separator: "/")[0])
         address6Prefix = NSNumber.init(value: Int32(addresses6[1].split(separator: "/")[1])!)
-        gatewayAddress = addresses[2]
         gateway6Address = addresses6[2]
+        // XXX what if the topologyType is not set? I guess it won't match!
+        if("subnet" == topologyType) {
+            addressMask = addresses[2]
+            // XXX the routeGateway could be "nil" I guess, then what?
+            // Most likely we don't want to set the gateway at all then...
+            gatewayAddress = routeGateway!
+        } else {
+            addressMask = "255.255.255.255"
+            gatewayAddress = addresses[2]
+        }
         self.dnsServers = dnsServers
         self.authToken = authToken
         self.peerId = peerId
